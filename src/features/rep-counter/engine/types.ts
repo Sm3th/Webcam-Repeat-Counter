@@ -29,3 +29,4 @@ export type KeypointName =
 
 export type Phase = 'up' | 'down';
 export type Side = 'left' | 'right';
+export type Orientation = 'side' | 'front';

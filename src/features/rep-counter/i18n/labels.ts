@@ -17,6 +17,10 @@ export interface RepCounterLabels {
   install: string;
   fullscreen: string;
   exitFullscreen: string;
+  orientation: {
+    side: string;
+    front: string;
+  };
   session: {
     title: string;
     total: string;
@@ -52,6 +56,10 @@ export const EN: RepCounterLabels = {
   install: 'Install app',
   fullscreen: 'Fullscreen',
   exitFullscreen: 'Exit fullscreen',
+  orientation: {
+    side: 'Turn side-on to the camera',
+    front: 'Face the camera',
+  },
   session: {
     title: 'Session',
     total: 'Total reps',
@@ -76,6 +84,7 @@ export const EN: RepCounterLabels = {
     curl: 'Biceps Curls',
     lunge: 'Lunges',
     situp: 'Sit-ups',
+    ohp: 'Shoulder Press',
   },
 };
 
@@ -96,6 +105,10 @@ export const TR: RepCounterLabels = {
   install: 'Uygulamayı yükle',
   fullscreen: 'Tam ekran',
   exitFullscreen: 'Tam ekrandan çık',
+  orientation: {
+    side: 'Kameraya yan dön',
+    front: 'Kameraya dön',
+  },
   session: {
     title: 'Oturum',
     total: 'Toplam tekrar',
@@ -120,6 +133,7 @@ export const TR: RepCounterLabels = {
     curl: 'Biceps Curl',
     lunge: 'Lunj',
     situp: 'Mekik',
+    ohp: 'Omuz Press',
   },
 };
 
@@ -140,6 +154,10 @@ export const PL: RepCounterLabels = {
   install: 'Zainstaluj aplikację',
   fullscreen: 'Pełny ekran',
   exitFullscreen: 'Wyjdź z pełnego ekranu',
+  orientation: {
+    side: 'Ustaw się bokiem do kamery',
+    front: 'Zwróć się do kamery',
+  },
   session: {
     title: 'Sesja',
     total: 'Łącznie powtórzeń',
@@ -164,5 +182,6 @@ export const PL: RepCounterLabels = {
     curl: 'Uginanie ramion',
     lunge: 'Wykroki',
     situp: 'Brzuszki',
+    ohp: 'Wyciskanie nad głowę',
   },
 };

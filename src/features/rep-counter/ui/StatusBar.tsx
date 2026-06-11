@@ -1,12 +1,14 @@
+import type { Orientation } from '../engine/types';
 import type { RepCounterLabels } from '../i18n/labels';
 
 interface StatusBarProps {
   fps: number;
   inFrame: boolean;
+  orientationWarn: Orientation | null;
   labels: RepCounterLabels;
 }
 
-export function StatusBar({ fps, inFrame, labels }: StatusBarProps) {
+export function StatusBar({ fps, inFrame, orientationWarn, labels }: StatusBarProps) {
   return (
     <div className="flex flex-col gap-2 text-xs text-text-dim">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -22,6 +24,12 @@ export function StatusBar({ fps, inFrame, labels }: StatusBarProps) {
           />
           {inFrame ? labels.inFrame : labels.moveIntoFrame}
         </span>
+        {orientationWarn && (
+          <span className="flex items-center gap-1.5 text-danger" role="status">
+            <span aria-hidden="true">⟳</span>
+            {labels.orientation[orientationWarn]}
+          </span>
+        )}
       </div>
       <p className="text-text-dim">{labels.privacy}</p>
     </div>

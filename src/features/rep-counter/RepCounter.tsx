@@ -4,8 +4,8 @@ import { EN } from './i18n/labels';
 import { angleABC } from './engine/angles';
 import { Ema } from './engine/smoothing';
 import { RepCounter as RepEngine } from './engine/repCounter';
-import { byName, pickSide } from './engine/keypoints';
-import type { Keypoint, KeypointName, Phase } from './engine/types';
+import { byName, pickSide, estimateOrientation } from './engine/keypoints';
+import type { Keypoint, KeypointName, Orientation, Phase } from './engine/types';
 import { useCamera } from './hooks/useCamera';
 import { usePoseDetector, type PoseFrame } from './hooks/usePoseDetector';
 import { CameraStage } from './ui/CameraStage';
@@ -22,6 +22,8 @@ interface HudState {
   lastRepGoodForm: boolean | null;
   fps: number;
   inFrame: boolean;
+  /** Expected orientation to nudge toward when the user is framed wrong, else null. */
+  orientationWarn: Orientation | null;
 }
 
 const INITIAL_HUD: HudState = {
@@ -30,6 +32,7 @@ const INITIAL_HUD: HudState = {
   lastRepGoodForm: null,
   fps: 0,
   inFrame: false,
+  orientationWarn: null,
 };
 
 export function RepCounter({
@@ -38,6 +41,7 @@ export function RepCounter({
   active,
   labels = EN,
   theme = 'standalone',
+  modelType = 'lightning',
   sink,
   onRep,
   onSetComplete,
@@ -178,12 +182,17 @@ export function RepCounter({
         });
       }
 
+      const orient = estimateOrientation(map, exercise.minKeypointScore);
+      const orientationWarn =
+        orient && orient !== exercise.orientation ? exercise.orientation : null;
+
       setHud({
         count: result.count,
         phase: result.phase,
         lastRepGoodForm: result.lastRepGoodForm,
         fps,
         inFrame: valid,
+        orientationWarn,
       });
     },
     [exercise],
@@ -192,6 +201,7 @@ export function RepCounter({
   const { status: detectorStatus, retry: retryDetector } = usePoseDetector({
     videoRef,
     enabled,
+    modelType,
     onFrame: handleFrame,
   });
 
@@ -267,7 +277,12 @@ export function RepCounter({
               }
             />
           )}
-          <StatusBar fps={hud.fps} inFrame={hud.inFrame} labels={labels} />
+          <StatusBar
+            fps={hud.fps}
+            inFrame={hud.inFrame}
+            orientationWarn={hud.orientationWarn}
+            labels={labels}
+          />
         </div>
 
         <div className="flex flex-col gap-4">

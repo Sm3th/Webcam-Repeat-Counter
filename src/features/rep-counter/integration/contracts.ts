@@ -35,6 +35,8 @@ export interface RepCounterProps {
   labels?: RepCounterLabels;
   /** 'inherit' consumes the host's CSS theme vars; 'standalone' applies the bundled tokens. */
   theme?: 'inherit' | 'standalone';
+  /** MoveNet variant: 'lightning' (fast, default) or 'thunder' (more accurate, slower). */
+  modelType?: 'lightning' | 'thunder';
   /** Where finished sets go. Optional in standalone. */
   sink?: RepSessionSink;
   onRep?: (e: RepEvent) => void;

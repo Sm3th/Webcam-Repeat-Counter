@@ -128,6 +128,62 @@ describe('RepCounter', () => {
     expect(r.lastRepGoodForm).toBeNull();
   });
 
+  describe("direction: 'extend' (e.g. shoulder press)", () => {
+    const EXT = {
+      downEnter: 95,
+      upEnter: 150,
+      minRepMs: 500,
+      targetDepth: 160,
+      direction: 'extend' as const,
+    };
+
+    it('counts one clean small→large→small cycle', () => {
+      const rc = new RepCounter(EXT);
+      let r = rc.update(80, true, 0); // racked (small)
+      r = rc.update(165, true, 400); // pressed up (large)
+      r = rc.update(80, true, 900); // returned
+      expect(r.count).toBe(1);
+    });
+
+    it('phase reports up at full extension, down when racked', () => {
+      const rc = new RepCounter(EXT);
+      rc.update(80, true, 0);
+      expect(rc.update(165, true, 400).phase).toBe('up'); // extended = up
+      expect(rc.update(80, true, 900).phase).toBe('down'); // racked = down
+    });
+
+    it('good form requires reaching lockout (max angle >= targetDepth)', () => {
+      const rc = new RepCounter(EXT);
+      rc.update(80, true, 0);
+      rc.update(155, true, 400); // above upEnter but below targetDepth 160
+      const r = rc.update(80, true, 900);
+      expect(r.count).toBe(1);
+      expect(r.lastRepGoodForm).toBe(false);
+
+      const rc2 = new RepCounter(EXT);
+      rc2.update(80, true, 0);
+      rc2.update(168, true, 400); // past lockout
+      const r2 = rc2.update(80, true, 900);
+      expect(r2.lastRepGoodForm).toBe(true);
+    });
+
+    it('partial press that never passes upEnter does not count', () => {
+      const rc = new RepCounter(EXT);
+      let r = rc.update(80, true, 0);
+      r = rc.update(140, true, 400); // below upEnter 150
+      r = rc.update(80, true, 900);
+      expect(r.count).toBe(0);
+    });
+
+    it('debounce applies to extend reps too', () => {
+      const rc = new RepCounter(EXT);
+      rc.update(80, true, 0);
+      rc.update(165, true, 100);
+      const r = rc.update(80, true, 300); // span 200ms < 500ms
+      expect(r.count).toBe(0);
+    });
+  });
+
   it('reset() zeroes count and phase', () => {
     const rc = new RepCounter(CFG);
     feed(rc, [
