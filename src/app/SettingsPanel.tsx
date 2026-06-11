@@ -74,7 +74,7 @@ export function SettingsPanel({ prefs, onChange, labels }: SettingsPanelProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-64 rounded-xl border border-border bg-surface p-4 shadow-xl">
+        <div className="fixed inset-x-4 bottom-4 z-40 w-auto rounded-xl border border-border bg-surface p-4 shadow-xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-2 sm:w-64">
           <h2 className="mb-2 text-xs font-bold uppercase tracking-widest text-text-dim">
             {labels.settings.title}
           </h2>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   RepCounter,
   EXERCISES,
@@ -38,9 +38,19 @@ export function App() {
   // Standalone persistence: completed sets land in localStorage.
   const sink = useMemo(() => createLocalStorageSink(), []);
 
+  // Mirror the theme onto <body> so the page background (and overscroll area)
+  // follows light/dark, not just the app wrapper.
+  useEffect(() => {
+    document.body.classList.add('rc-theme-standalone');
+    document.body.classList.toggle('light', light);
+    return () => {
+      document.body.classList.remove('rc-theme-standalone', 'light');
+    };
+  }, [light]);
+
   return (
     <div
-      className={`rc-theme-standalone rc-hero relative min-h-full bg-bg text-text ${
+      className={`rc-theme-standalone rc-hero relative min-h-screen text-text ${
         light ? 'light' : ''
       }`}
     >
@@ -48,18 +58,35 @@ export function App() {
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span
-              aria-hidden="true"
-              className="rc-elevated grid h-11 w-11 place-items-center rounded-2xl border border-border bg-surface text-accent"
+              aria-label="FitTrack"
+              className="rc-elevated grid h-11 w-11 place-items-center rounded-2xl bg-accent text-accent-ink"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="5" y="10.5" width="14" height="3" rx="1" />
-                <rect x="3" y="7" width="3" height="10" rx="1" />
-                <rect x="18" y="7" width="3" height="10" rx="1" />
+              {/* FitTrack chevron mark */}
+              <svg width="24" height="24" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+                <line
+                  x1="14"
+                  y1="76"
+                  x2="50"
+                  y2="22"
+                  stroke="currentColor"
+                  strokeWidth="11"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="50"
+                  y1="22"
+                  x2="86"
+                  y2="76"
+                  stroke="currentColor"
+                  strokeWidth="11"
+                  strokeLinecap="round"
+                />
               </svg>
             </span>
             <div>
               <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
-                Rep<span className="text-accent">Counter</span>
+                F<span className="text-accent">i</span>tTrack{' '}
+                <span className="text-text-dim">Reps</span>
               </h1>
               <p className="text-sm text-text-dim">
                 Real-time calisthenics reps from your webcam — on device.

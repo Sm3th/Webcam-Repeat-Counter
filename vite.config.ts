@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Rep Counter',
+        name: 'FitTrack Reps',
         short_name: 'Reps',
         description:
           'Count calisthenics reps in real time with your webcam — fully on-device.',

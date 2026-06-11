@@ -1,9 +1,10 @@
-// Generates the PWA PNG icons (no image deps) — a lime dumbbell on near-black.
+// Generates the PWA PNG icons (no image deps) — the FitTrack chevron mark:
+// a dark chevron on a lime tile.
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 
-const BG = [0x0a, 0x0a, 0x0a];
-const ACCENT = [0xc6, 0xf4, 0x32];
+const ACCENT = [0xc6, 0xf4, 0x32]; // lime tile
+const INK = [0x0a, 0x0a, 0x0a]; // dark chevron
 
 function crc32(buf) {
   let c = ~0;
@@ -34,34 +35,41 @@ function px(set, x, y, w, color, a = 255) {
 function makePng(size, { maskable = false } = {}) {
   const w = size;
   const raw = Buffer.alloc((w * 4 + 1) * w, 0);
-  // filter byte 0 per row is already 0.
-  const cx = w / 2;
-  const cy = w / 2;
-  const inset = maskable ? w * 0.18 : w * 0.06;
-
+  // Lime tile background.
   for (let y = 0; y < w; y++) {
     for (let x = 0; x < w; x++) {
-      px(raw, x, y, w, BG, 255);
+      px(raw, x, y, w, ACCENT, 255);
     }
   }
 
-  // Dumbbell: a horizontal bar + two end weights, centered, fitting inside inset.
-  const half = w / 2 - inset;
-  const barH = w * 0.10;
-  const plateW = w * 0.12;
-  const plateH = w * 0.36;
-  const span = half * 0.92;
+  // Dark chevron: two thick round-capped strokes forming a "^", matching logo.svg
+  // (apex at 50,22; arms to 14,76 and 86,76 in a 100×100 box).
+  const pad = maskable ? w * 0.2 : w * 0.1;
+  const s = (w - 2 * pad) / 100; // scale from the 100-unit design box
+  const ox = pad;
+  const oy = pad;
+  const apex = { x: ox + 50 * s, y: oy + 22 * s };
+  const left = { x: ox + 14 * s, y: oy + 76 * s };
+  const right = { x: ox + 86 * s, y: oy + 76 * s };
+  const half = (11 * s) / 2; // stroke half-width
+
+  const distToSeg = (px2, py2, a, b) => {
+    const vx = b.x - a.x;
+    const vy = b.y - a.y;
+    const wx = px2 - a.x;
+    const wy = py2 - a.y;
+    let t = (wx * vx + wy * vy) / (vx * vx + vy * vy);
+    t = Math.max(0, Math.min(1, t));
+    const dx = a.x + t * vx - px2;
+    const dy = a.y + t * vy - py2;
+    return Math.hypot(dx, dy);
+  };
 
   for (let y = 0; y < w; y++) {
     for (let x = 0; x < w; x++) {
-      const dx = x - cx;
-      const dy = y - cy;
-      const inBar = Math.abs(dx) <= span && Math.abs(dy) <= barH / 2;
-      const onLeftPlate =
-        dx >= -span - plateW && dx <= -span + plateW && Math.abs(dy) <= plateH / 2;
-      const onRightPlate =
-        dx <= span + plateW && dx >= span - plateW && Math.abs(dy) <= plateH / 2;
-      if (inBar || onLeftPlate || onRightPlate) px(raw, x, y, w, ACCENT, 255);
+      const onChevron =
+        distToSeg(x, y, left, apex) <= half || distToSeg(x, y, apex, right) <= half;
+      if (onChevron) px(raw, x, y, w, INK, 255);
     }
   }
 
