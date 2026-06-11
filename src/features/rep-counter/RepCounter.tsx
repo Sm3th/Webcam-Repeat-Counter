@@ -1,0 +1,250 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { RepCounterProps, CompletedSet } from './integration/contracts';
+import { EN } from './i18n/labels';
+import { angleABC } from './engine/angles';
+import { Ema } from './engine/smoothing';
+import { RepCounter as RepEngine } from './engine/repCounter';
+import { byName, pickSide } from './engine/keypoints';
+import type { Keypoint, KeypointName, Phase } from './engine/types';
+import { useCamera } from './hooks/useCamera';
+import { usePoseDetector, type PoseFrame } from './hooks/usePoseDetector';
+import { CameraStage } from './ui/CameraStage';
+import { RepHud } from './ui/RepHud';
+import { StatusBar } from './ui/StatusBar';
+import { Controls } from './ui/Controls';
+import { ErrorPanel, type RepCounterErrorKind } from './ui/ErrorPanel';
+
+interface HudState {
+  count: number;
+  phase: Phase;
+  lastRepGoodForm: boolean | null;
+  fps: number;
+  inFrame: boolean;
+}
+
+const INITIAL_HUD: HudState = {
+  count: 0,
+  phase: 'up',
+  lastRepGoodForm: null,
+  fps: 0,
+  inFrame: false,
+};
+
+export function RepCounter({
+  exercise,
+  exerciseId,
+  active,
+  labels = EN,
+  theme = 'standalone',
+  sink,
+  onRep,
+  onSetComplete,
+  children,
+}: RepCounterProps) {
+  const resolvedExerciseId = exerciseId ?? exercise.id;
+
+  const { videoRef, status: cameraStatus, start, stop } = useCamera();
+  const [running, setRunning] = useState(false);
+  const enabled = active && running && cameraStatus === 'ready';
+
+  // Engine instances live in refs; recreated when the exercise profile changes.
+  const engineRef = useRef(new RepEngine(exercise));
+  const emaRef = useRef(new Ema(exercise.smoothingAlpha));
+  const keypointsRef = useRef<Keypoint[]>([]);
+  const prevCountRef = useRef(0);
+
+  // Current set accumulator.
+  const setStartRef = useRef(0);
+  const perRepRef = useRef<Array<{ goodForm: boolean | null; at: number }>>([]);
+
+  const [hud, setHud] = useState<HudState>(INITIAL_HUD);
+
+  // Keep latest callbacks/labels reachable from imperative handlers.
+  const onRepRef = useRef(onRep);
+  onRepRef.current = onRep;
+  const onSetCompleteRef = useRef(onSetComplete);
+  onSetCompleteRef.current = onSetComplete;
+  const sinkRef = useRef(sink);
+  sinkRef.current = sink;
+  const exerciseIdRef = useRef(resolvedExerciseId);
+  exerciseIdRef.current = resolvedExerciseId;
+
+  const beginSet = useCallback(() => {
+    setStartRef.current = Date.now();
+    perRepRef.current = [];
+    prevCountRef.current = 0;
+  }, []);
+
+  /** Finalize the current set if it has any reps, emitting it to listeners + sink. */
+  const finalizeSet = useCallback(() => {
+    const reps = perRepRef.current.length;
+    if (reps === 0) return;
+    const endedAt = Date.now();
+    const startedAt = setStartRef.current || endedAt;
+    const set: CompletedSet = {
+      exerciseId: exerciseIdRef.current,
+      reps,
+      goodFormReps: perRepRef.current.filter((r) => r.goodForm === true).length,
+      startedAt,
+      endedAt,
+      durationMs: endedAt - startedAt,
+      perRep: [...perRepRef.current],
+    };
+    onSetCompleteRef.current?.(set);
+    void sinkRef.current?.saveSet(set);
+    perRepRef.current = [];
+  }, []);
+
+  const resetEngine = useCallback(() => {
+    engineRef.current.reset();
+    emaRef.current.reset();
+    keypointsRef.current = [];
+    setHud(INITIAL_HUD);
+  }, []);
+
+  // Recreate the engine when the exercise profile changes (also ends the set).
+  const exerciseKey = exercise.id;
+  useEffect(() => {
+    finalizeSet();
+    engineRef.current = new RepEngine(exercise);
+    emaRef.current = new Ema(exercise.smoothingAlpha);
+    resetEngine();
+    beginSet();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exerciseKey]);
+
+  // Camera lifecycle follows `active && running`.
+  useEffect(() => {
+    if (active && running) {
+      void start();
+      beginSet();
+    } else {
+      stop();
+      finalizeSet();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, running]);
+
+  // Process one detector frame: angle → smooth → state machine → HUD/events.
+  const handleFrame = useCallback(
+    ({ keypoints, fps }: PoseFrame) => {
+      keypointsRef.current = keypoints;
+      const map = byName(keypoints);
+      const { side, score } = pickSide(map, exercise.leftTriplet, exercise.rightTriplet);
+      const valid = score >= exercise.minKeypointScore;
+
+      let smoothed = emaRef.current.current() ?? NaN;
+      if (valid) {
+        const triplet = side === 'left' ? exercise.leftTriplet : exercise.rightTriplet;
+        const a = map.get(triplet[0])!;
+        const b = map.get(triplet[1])!;
+        const c = map.get(triplet[2])!;
+        const raw = angleABC(a, b, c);
+        if (!Number.isNaN(raw)) smoothed = emaRef.current.next(raw);
+      }
+
+      const result = engineRef.current.update(smoothed, valid, performance.now());
+
+      if (result.count > prevCountRef.current) {
+        prevCountRef.current = result.count;
+        const at = Date.now();
+        perRepRef.current.push({ goodForm: result.lastRepGoodForm, at });
+        onRepRef.current?.({
+          exerciseId: exerciseIdRef.current,
+          index: result.count,
+          goodForm: result.lastRepGoodForm,
+          at,
+        });
+      }
+
+      setHud({
+        count: result.count,
+        phase: result.phase,
+        lastRepGoodForm: result.lastRepGoodForm,
+        fps,
+        inFrame: valid,
+      });
+    },
+    [exercise],
+  );
+
+  const { status: detectorStatus, retry: retryDetector } = usePoseDetector({
+    videoRef,
+    enabled,
+    onFrame: handleFrame,
+  });
+
+  const handleReset = useCallback(() => {
+    finalizeSet();
+    resetEngine();
+    beginSet();
+  }, [finalizeSet, resetEngine, beginSet]);
+
+  const handleToggle = useCallback(() => setRunning((r) => !r), []);
+
+  const handleRetry = useCallback(() => {
+    if (detectorStatus === 'error') retryDetector();
+    else void start();
+  }, [detectorStatus, retryDetector, start]);
+
+  const activeJoints = useMemo<Set<KeypointName>>(
+    () => new Set<KeypointName>([...exercise.leftTriplet, ...exercise.rightTriplet]),
+    [exercise],
+  );
+
+  const errorKind: RepCounterErrorKind | null = useMemo(() => {
+    if (
+      cameraStatus === 'denied' ||
+      cameraStatus === 'nocamera' ||
+      cameraStatus === 'inuse' ||
+      cameraStatus === 'insecure'
+    ) {
+      return cameraStatus;
+    }
+    if (detectorStatus === 'error') return 'model';
+    return null;
+  }, [cameraStatus, detectorStatus]);
+
+  const rootClass = theme === 'standalone' ? 'rc-theme-standalone' : '';
+
+  return (
+    <div className={`${rootClass} flex w-full flex-col gap-6`}>
+      {children}
+      <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+        <div className="flex flex-col gap-4">
+          {errorKind && running ? (
+            <ErrorPanel kind={errorKind} onRetry={handleRetry} labels={labels} />
+          ) : (
+            <CameraStage
+              videoRef={videoRef}
+              keypointsRef={keypointsRef}
+              activeJoints={activeJoints}
+              minScore={exercise.minKeypointScore}
+              active={enabled}
+            />
+          )}
+          <StatusBar fps={hud.fps} inFrame={hud.inFrame} labels={labels} />
+        </div>
+
+        <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface p-6">
+          <RepHud
+            count={hud.count}
+            phase={hud.phase}
+            lastRepGoodForm={hud.lastRepGoodForm}
+            labels={labels}
+          />
+          <Controls
+            running={running}
+            onToggle={handleToggle}
+            onReset={handleReset}
+            labels={labels}
+          />
+          {detectorStatus === 'loading' && running && (
+            <p className="text-xs text-text-dim">{labels.loadingModel}</p>
+          )}
+          <p className="text-center text-xs text-text-dim">{exercise.hint}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
