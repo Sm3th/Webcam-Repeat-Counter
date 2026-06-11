@@ -184,6 +184,23 @@ describe('RepCounter', () => {
     });
   });
 
+  it('reports tempo and ROM for a counted rep', () => {
+    const rc = new RepCounter(CFG);
+    rc.update(170, true, 0);
+    rc.update(80, true, 300);
+    const r = rc.update(175, true, 900);
+    expect(r.count).toBe(1);
+    expect(r.lastRepTempoMs).toBe(600); // 900 - 300
+    expect(r.lastRepRomDeg).toBe(95); // 175 - 80
+  });
+
+  it('leaves tempo/ROM null until a rep completes', () => {
+    const rc = new RepCounter(CFG);
+    const r = rc.update(170, true, 0);
+    expect(r.lastRepTempoMs).toBeNull();
+    expect(r.lastRepRomDeg).toBeNull();
+  });
+
   it('reset() zeroes count and phase', () => {
     const rc = new RepCounter(CFG);
     feed(rc, [

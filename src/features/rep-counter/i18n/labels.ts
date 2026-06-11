@@ -28,6 +28,23 @@ export interface RepCounterLabels {
     accuracy: string;
     best: string;
   };
+  settings: {
+    title: string;
+    model: string;
+    fast: string;
+    accurate: string;
+    sound: string;
+    voice: string;
+    rest: string;
+  };
+  summary: {
+    title: string;
+    avgTempo: string;
+    bestRom: string;
+    close: string;
+    rest: string;
+    skip: string;
+  };
   errors: {
     denied: string;
     nocamera: string;
@@ -66,6 +83,23 @@ export const EN: RepCounterLabels = {
     sets: 'Sets',
     accuracy: 'Form',
     best: 'Best set',
+  },
+  settings: {
+    title: 'Settings',
+    model: 'Model',
+    fast: 'Fast',
+    accurate: 'Accurate',
+    sound: 'Beep on rep',
+    voice: 'Voice count',
+    rest: 'Rest timer (s)',
+  },
+  summary: {
+    title: 'Set complete',
+    avgTempo: 'Avg tempo',
+    bestRom: 'Best ROM',
+    close: 'Done',
+    rest: 'Rest',
+    skip: 'Skip',
   },
   errors: {
     denied:
@@ -116,6 +150,23 @@ export const TR: RepCounterLabels = {
     accuracy: 'Form',
     best: 'En iyi set',
   },
+  settings: {
+    title: 'Ayarlar',
+    model: 'Model',
+    fast: 'Hızlı',
+    accurate: 'Hassas',
+    sound: 'Tekrarda bip',
+    voice: 'Sesli sayım',
+    rest: 'Dinlenme (sn)',
+  },
+  summary: {
+    title: 'Set tamam',
+    avgTempo: 'Ort. tempo',
+    bestRom: 'En iyi ROM',
+    close: 'Bitti',
+    rest: 'Dinlen',
+    skip: 'Geç',
+  },
   errors: {
     denied:
       'Kamera erişimi reddedildi. Tarayıcıdan kamera iznini ver ve tekrar dene.',
@@ -164,6 +215,23 @@ export const PL: RepCounterLabels = {
     sets: 'Serie',
     accuracy: 'Forma',
     best: 'Najlepsza seria',
+  },
+  settings: {
+    title: 'Ustawienia',
+    model: 'Model',
+    fast: 'Szybki',
+    accurate: 'Dokładny',
+    sound: 'Sygnał przy powt.',
+    voice: 'Liczenie głosowe',
+    rest: 'Odpoczynek (s)',
+  },
+  summary: {
+    title: 'Seria ukończona',
+    avgTempo: 'Śr. tempo',
+    bestRom: 'Najlepszy ROM',
+    close: 'Gotowe',
+    rest: 'Odpoczynek',
+    skip: 'Pomiń',
   },
   errors: {
     denied:

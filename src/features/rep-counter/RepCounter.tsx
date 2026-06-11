@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { RepCounterProps, CompletedSet } from './integration/contracts';
+import type { RepCounterProps, CompletedSet, PerRep } from './integration/contracts';
 import { EN } from './i18n/labels';
 import { angleABC } from './engine/angles';
 import { Ema } from './engine/smoothing';
 import { RepCounter as RepEngine } from './engine/repCounter';
+import { RepCues } from './engine/audio';
 import { byName, pickSide, estimateOrientation } from './engine/keypoints';
 import type { Keypoint, KeypointName, Orientation, Phase } from './engine/types';
 import { useCamera } from './hooks/useCamera';
@@ -15,6 +16,7 @@ import { Controls } from './ui/Controls';
 import { ErrorPanel, type RepCounterErrorKind } from './ui/ErrorPanel';
 import { OverlayHud } from './ui/OverlayHud';
 import { SessionStats, type SessionSummary } from './ui/SessionStats';
+import { SetSummary } from './ui/SetSummary';
 
 interface HudState {
   count: number;
@@ -42,6 +44,9 @@ export function RepCounter({
   labels = EN,
   theme = 'standalone',
   modelType = 'lightning',
+  sound = false,
+  voice = false,
+  restSeconds = 0,
   sink,
   onRep,
   onSetComplete,
@@ -61,7 +66,7 @@ export function RepCounter({
 
   // Current set accumulator.
   const setStartRef = useRef(0);
-  const perRepRef = useRef<Array<{ goodForm: boolean | null; at: number }>>([]);
+  const perRepRef = useRef<PerRep[]>([]);
 
   const [hud, setHud] = useState<HudState>(INITIAL_HUD);
 
@@ -73,6 +78,8 @@ export function RepCounter({
     bestSet: 0,
   });
   const [session, setSession] = useState<SessionSummary>(sessionRef.current);
+  // The most recently completed set, shown as a summary modal until dismissed.
+  const [summary, setSummary] = useState<CompletedSet | null>(null);
 
   // Keep latest callbacks/labels reachable from imperative handlers.
   const onRepRef = useRef(onRep);
@@ -83,6 +90,20 @@ export function RepCounter({
   sinkRef.current = sink;
   const exerciseIdRef = useRef(resolvedExerciseId);
   exerciseIdRef.current = resolvedExerciseId;
+  const soundRef = useRef(sound);
+  soundRef.current = sound;
+  const voiceRef = useRef(voice);
+  voiceRef.current = voice;
+
+  // Audio cues (beep / spoken count) — created lazily, disposed on unmount.
+  const cuesRef = useRef<RepCues | null>(null);
+  useEffect(() => {
+    cuesRef.current = new RepCues();
+    return () => {
+      cuesRef.current?.dispose();
+      cuesRef.current = null;
+    };
+  }, []);
 
   const beginSet = useCallback(() => {
     setStartRef.current = Date.now();
@@ -118,6 +139,7 @@ export function RepCounter({
     };
     sessionRef.current = next;
     setSession(next);
+    setSummary(set);
   }, []);
 
   const resetEngine = useCallback(() => {
@@ -173,12 +195,20 @@ export function RepCounter({
       if (result.count > prevCountRef.current) {
         prevCountRef.current = result.count;
         const at = Date.now();
-        perRepRef.current.push({ goodForm: result.lastRepGoodForm, at });
+        const tempoMs =
+          result.lastRepTempoMs != null ? Math.round(result.lastRepTempoMs) : undefined;
+        const romDeg =
+          result.lastRepRomDeg != null ? Math.round(result.lastRepRomDeg) : undefined;
+        perRepRef.current.push({ goodForm: result.lastRepGoodForm, at, tempoMs, romDeg });
+        if (soundRef.current) cuesRef.current?.beep();
+        if (voiceRef.current) cuesRef.current?.speak(String(result.count));
         onRepRef.current?.({
           exerciseId: exerciseIdRef.current,
           index: result.count,
           goodForm: result.lastRepGoodForm,
           at,
+          tempoMs,
+          romDeg,
         });
       }
 
@@ -249,7 +279,7 @@ export function RepCounter({
   };
 
   return (
-    <div className={`${rootClass} flex w-full flex-col gap-6`}>
+    <div className={`${rootClass} relative flex w-full flex-col gap-6`}>
       {children}
       <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
         <div className="flex flex-col gap-4">
@@ -308,6 +338,16 @@ export function RepCounter({
           <SessionStats summary={liveSummary} labels={labels} />
         </div>
       </div>
+
+      {summary && (
+        <SetSummary
+          set={summary}
+          exerciseName={exerciseName}
+          restSeconds={restSeconds}
+          labels={labels}
+          onClose={() => setSummary(null)}
+        />
+      )}
     </div>
   );
 }

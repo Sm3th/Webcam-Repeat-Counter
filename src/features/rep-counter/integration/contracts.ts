@@ -7,6 +7,15 @@ export interface RepEvent {
   index: number; // 1-based rep number within the current set
   goodForm: boolean | null;
   at: number; // epoch ms
+  tempoMs?: number; // active duration of this rep
+  romDeg?: number; // range of motion (degrees) of this rep
+}
+
+export interface PerRep {
+  goodForm: boolean | null;
+  at: number;
+  tempoMs?: number;
+  romDeg?: number;
 }
 
 export interface CompletedSet {
@@ -16,7 +25,7 @@ export interface CompletedSet {
   startedAt: number;
   endedAt: number;
   durationMs: number;
-  perRep: Array<{ goodForm: boolean | null; at: number }>;
+  perRep: PerRep[];
 }
 
 /** Persistence boundary. Standalone uses localStorage; FitTrack injects an API / IndexedDB-queue impl. */
@@ -37,6 +46,12 @@ export interface RepCounterProps {
   theme?: 'inherit' | 'standalone';
   /** MoveNet variant: 'lightning' (fast, default) or 'thunder' (more accurate, slower). */
   modelType?: 'lightning' | 'thunder';
+  /** Play a short beep on each counted rep. */
+  sound?: boolean;
+  /** Speak the running count on each rep (TTS). */
+  voice?: boolean;
+  /** Rest countdown (seconds) shown on the set-complete summary; 0 disables it. */
+  restSeconds?: number;
   /** Where finished sets go. Optional in standalone. */
   sink?: RepSessionSink;
   onRep?: (e: RepEvent) => void;

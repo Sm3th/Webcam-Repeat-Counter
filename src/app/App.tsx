@@ -11,6 +11,8 @@ import {
 import { ExercisePicker } from '../features/rep-counter/ui/ExercisePicker';
 import { createLocalStorageSink } from '../features/rep-counter/integration/localStorageSink';
 import { InstallButton } from './InstallButton';
+import { SettingsPanel } from './SettingsPanel';
+import { usePrefs } from './usePrefs';
 
 type Lang = 'en' | 'tr' | 'pl';
 const PACKS: Record<Lang, RepCounterLabels> = { en: EN, tr: TR, pl: PL };
@@ -26,6 +28,7 @@ export function App() {
   const [exercise, setExercise] = useState<ExerciseConfig>(EXERCISES.pushup);
   const [lang, setLang] = useState<Lang>('en');
   const [light, setLight] = useState(false);
+  const [prefs, setPrefs] = usePrefs();
   const labels = PACKS[lang];
 
   // Standalone persistence: completed sets land in localStorage.
@@ -62,6 +65,8 @@ export function App() {
 
           <div className="flex items-center gap-3">
             <InstallButton label={labels.install} />
+
+            <SettingsPanel prefs={prefs} onChange={setPrefs} labels={labels} />
 
             <button
               type="button"
@@ -126,6 +131,10 @@ export function App() {
           active={true}
           labels={labels}
           theme="standalone"
+          modelType={prefs.modelType}
+          sound={prefs.sound}
+          voice={prefs.voice}
+          restSeconds={prefs.restSeconds}
           sink={sink}
         />
       </div>

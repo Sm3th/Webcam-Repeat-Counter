@@ -26,6 +26,8 @@ export interface RepUpdate {
   count: number;
   phase: Phase; // body position: 'up' = large angle, 'down' = small angle
   lastRepGoodForm: boolean | null; // null when targetDepth not set or no rep yet
+  lastRepTempoMs: number | null; // active duration of the most recent rep
+  lastRepRomDeg: number | null; // range of motion (max−min angle) of the most recent rep
 }
 
 export class RepCounter {
@@ -33,8 +35,11 @@ export class RepCounter {
   /** Internal state: 'up' = resting, 'down' = active (mid-rep). */
   private resting: 'up' | 'down' = 'up';
   private activeStartTime = 0;
-  private extremumThisRep = NaN; // min angle (flex) or max angle (extend) this rep
+  private minThisRep = NaN;
+  private maxThisRep = NaN;
   private lastRepGoodForm: boolean | null = null;
+  private lastRepTempoMs: number | null = null;
+  private lastRepRomDeg: number | null = null;
 
   constructor(private readonly cfg: RepCounterConfig) {}
 
@@ -54,28 +59,32 @@ export class RepCounter {
       if (entered) {
         this.resting = 'down';
         this.activeStartTime = t;
-        this.extremumThisRep = angle;
+        this.minThisRep = angle;
+        this.maxThisRep = angle;
       }
     } else {
-      // Active phase: track the rep's extremum and watch for the return.
-      this.extremumThisRep = flex
-        ? Math.min(this.extremumThisRep, angle)
-        : Math.max(this.extremumThisRep, angle);
+      // Active phase: track the rep's swept range and watch for the return.
+      this.minThisRep = Math.min(this.minThisRep, angle);
+      this.maxThisRep = Math.max(this.maxThisRep, angle);
 
       const completed = flex ? angle > this.cfg.upEnter : angle < this.cfg.downEnter;
       if (completed) {
         const span = t - this.activeStartTime;
         if (span >= this.cfg.minRepMs) {
           this.count += 1;
+          const peak = flex ? this.minThisRep : this.maxThisRep;
           this.lastRepGoodForm =
             this.cfg.targetDepth != null
               ? flex
-                ? this.extremumThisRep <= this.cfg.targetDepth
-                : this.extremumThisRep >= this.cfg.targetDepth
+                ? peak <= this.cfg.targetDepth
+                : peak >= this.cfg.targetDepth
               : null;
+          this.lastRepTempoMs = span;
+          this.lastRepRomDeg = this.maxThisRep - this.minThisRep;
         }
         this.resting = 'up';
-        this.extremumThisRep = NaN;
+        this.minThisRep = NaN;
+        this.maxThisRep = NaN;
       }
     }
     return this.snapshot();
@@ -85,8 +94,11 @@ export class RepCounter {
     this.count = 0;
     this.resting = 'up';
     this.activeStartTime = 0;
-    this.extremumThisRep = NaN;
+    this.minThisRep = NaN;
+    this.maxThisRep = NaN;
     this.lastRepGoodForm = null;
+    this.lastRepTempoMs = null;
+    this.lastRepRomDeg = null;
   }
 
   private snapshot(): RepUpdate {
@@ -102,6 +114,8 @@ export class RepCounter {
       count: this.count,
       phase,
       lastRepGoodForm: this.lastRepGoodForm,
+      lastRepTempoMs: this.lastRepTempoMs,
+      lastRepRomDeg: this.lastRepRomDeg,
     };
   }
 }
