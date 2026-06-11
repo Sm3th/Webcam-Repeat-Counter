@@ -14,13 +14,23 @@ an installable, offline-capable PWA.
 
 ## Features
 
-- 🎥 **Real-time rep counting** for push-ups, squats, and pull-ups via webcam pose detection.
-- 🧠 **On-device only** — MoveNet (SinglePose Lightning) runs on the WebGL backend; no uploads, no account.
-- ✅ **Form feedback** — each rep is graded against a target depth (`Good` / `Go lower`).
-- 🪞 **Mirrored selfie view** with a live skeleton overlay; tracked joints highlighted.
-- 📊 **Live status** — FPS, "in frame" indicator, and a persistent privacy note.
-- 🌍 **i18n** — English, Türkçe, Polski out of the box.
-- 📦 **Installable PWA** — works offline after first load (app shell + model cached).
+- 🎥 **Real-time rep counting** for **7 exercises** — push-ups, squats, pull-ups,
+  biceps curls, lunges, sit-ups, and shoulder press — via webcam pose detection.
+- 🔁 **Bidirectional engine** — counts both joint-flexing reps (push-up) and
+  joint-extending reps (shoulder press) from one tested state machine.
+- 🧠 **On-device only** — MoveNet runs on the WebGL backend; no uploads, no account.
+  Pick **Lightning** (fast) or **Thunder** (accurate) at runtime.
+- ✅ **Form feedback** — each rep is graded against a target range (`Good` / `Go lower`),
+  plus per-rep **tempo** and **range-of-motion**, and a **set summary** on finish.
+- 🧭 **Framing hints** — warns when you're side-on/front-on the wrong way for the move.
+- 🔊 **Audio & voice cues** — optional beep and spoken count on every rep.
+- ⏱️ **Rest timer** between sets; live **session stats** (total reps, sets, form %, best set).
+- 📈 **Progress history** — per-exercise personal records, hand-rolled SVG charts, and
+  **JSON/CSV export** — all from on-device storage.
+- 🪞 **Mirrored selfie view** with a live skeleton overlay + **fullscreen** mode.
+- 🌍 **i18n** — English, Türkçe, Polski; 🌗 **light/dark** themes.
+- 📦 **Installable PWA** — TensorFlow is lazy-loaded (fast first paint) and the app
+  shell + model are cached, so it works offline after first load.
 - ♿ **Accessible** — keyboard-operable controls, `aria-live` rep count, respects `prefers-reduced-motion`.
 - 🧩 **Embeddable** — ships as a single self-contained feature module (see below).
 
@@ -101,16 +111,39 @@ import { RepCounter, EXERCISES, TR } from './features/rep-counter';
   active={true}                 // lifecycle gate: true = run, false = release camera
   labels={TR}                   // injected i18n (EN/TR/PL provided)
   theme="inherit"               // consume the host's CSS theme vars
+  modelType="thunder"           // 'lightning' (default) or 'thunder'
+  sound voice                   // beep / spoken count per rep
+  restSeconds={60}              // rest countdown on the set-complete summary
   sink={mySink}                 // RepSessionSink: where completed sets are saved
-  onRep={(e) => {/* RepEvent */}}
+  onRep={(e) => {/* RepEvent: { index, goodForm, at, tempoMs?, romDeg? } */}}
   onSetComplete={(s) => {/* CompletedSet */}}
 />
 ```
 
 The pure engine reads CSS variables for color (`--accent`, `--bg`, `--surface`, …)
-and never hardcodes hex, so `theme="inherit"` lets a host's own dark theme drive it.
-`onSetComplete` / `sink` emit a `CompletedSet` (reps, good-form reps, timing,
-per-rep detail) that maps directly onto a workout/set log.
+and never hardcodes hex, so `theme="inherit"` lets a host's own theme drive it.
+`onSetComplete` / `sink` emit a `CompletedSet` (reps, good-form reps, timing, and
+per-rep tempo/ROM detail) that maps directly onto a workout/set log.
+
+### Theming & FitTrack alignment
+
+In `theme="inherit"` mode the feature's semantic vars are **bridged from FitTrack
+Pro's design tokens** with fallbacks, so dropping it into FitTrack picks up the host
+theme (including light mode) with zero wiring:
+
+| Feature var   | ← FitTrack token        |
+| ------------- | ----------------------- |
+| `--bg`        | `--surface-0`           |
+| `--surface`   | `--surface-1`           |
+| `--surface-2` | `--surface-3`           |
+| `--border`    | `--border-default`      |
+| `--text`      | `--text-primary`        |
+| `--text-dim`  | `--text-tertiary`       |
+| `--accent`    | `--p-500`               |
+| `--accent-ink`| `--text-on-accent`      |
+
+`theme="standalone"` applies FitTrack's literal values instead (with a `.light`
+variant), so this demo looks like a FitTrack page on its own.
 
 ## License
 
