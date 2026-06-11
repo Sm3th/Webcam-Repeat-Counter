@@ -20,7 +20,7 @@ export function ExercisePicker({
     <div
       role="radiogroup"
       aria-label="Exercise"
-      className="inline-flex rounded-lg border border-border bg-surface p-1"
+      className="flex flex-wrap gap-1 rounded-lg border border-border bg-surface p-1"
     >
       {exercises.map((ex) => {
         const selected = ex.id === selectedId;

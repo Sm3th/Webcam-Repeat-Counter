@@ -55,6 +55,9 @@ export const EN: RepCounterLabels = {
     pushup: 'Push-ups',
     squat: 'Squats',
     pullup: 'Pull-ups',
+    curl: 'Biceps Curls',
+    lunge: 'Lunges',
+    situp: 'Sit-ups',
   },
 };
 
@@ -87,6 +90,9 @@ export const TR: RepCounterLabels = {
     pushup: 'Şınav',
     squat: 'Squat',
     pullup: 'Barfiks',
+    curl: 'Biceps Curl',
+    lunge: 'Lunj',
+    situp: 'Mekik',
   },
 };
 
@@ -119,5 +125,8 @@ export const PL: RepCounterLabels = {
     pushup: 'Pompki',
     squat: 'Przysiady',
     pullup: 'Podciąganie',
+    curl: 'Uginanie ramion',
+    lunge: 'Wykroki',
+    situp: 'Brzuszki',
   },
 };

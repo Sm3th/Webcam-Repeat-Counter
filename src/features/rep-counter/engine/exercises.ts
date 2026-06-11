@@ -1,7 +1,7 @@
 import type { KeypointName } from './types';
 import type { RepCounterConfig } from './repCounter';
 
-export type ExerciseId = 'pushup' | 'squat' | 'pullup';
+export type ExerciseId = 'pushup' | 'squat' | 'pullup' | 'curl' | 'lunge' | 'situp';
 
 export interface ExerciseConfig extends RepCounterConfig {
   id: ExerciseId;
@@ -52,5 +52,44 @@ export const EXERCISES: Record<ExerciseId, ExerciseConfig> = {
     smoothingAlpha: 0.4,
     minKeypointScore: 0.3,
     hint: 'Face the camera, arms and torso in frame.',
+  },
+  curl: {
+    id: 'curl',
+    label: 'Biceps Curls',
+    leftTriplet: ['left_shoulder', 'left_elbow', 'left_wrist'],
+    rightTriplet: ['right_shoulder', 'right_elbow', 'right_wrist'],
+    downEnter: 70,
+    upEnter: 150,
+    minRepMs: 400,
+    targetDepth: 55,
+    smoothingAlpha: 0.4,
+    minKeypointScore: 0.3,
+    hint: 'Side-on, upper arm still — curl through the full range.',
+  },
+  lunge: {
+    id: 'lunge',
+    label: 'Lunges',
+    leftTriplet: ['left_hip', 'left_knee', 'left_ankle'],
+    rightTriplet: ['right_hip', 'right_knee', 'right_ankle'],
+    downEnter: 110,
+    upEnter: 160,
+    minRepMs: 600,
+    targetDepth: 100,
+    smoothingAlpha: 0.4,
+    minKeypointScore: 0.3,
+    hint: 'Side-on, step forward and lower your back knee.',
+  },
+  situp: {
+    id: 'situp',
+    label: 'Sit-ups',
+    leftTriplet: ['left_shoulder', 'left_hip', 'left_knee'],
+    rightTriplet: ['right_shoulder', 'right_hip', 'right_knee'],
+    downEnter: 90,
+    upEnter: 130,
+    minRepMs: 600,
+    targetDepth: 80,
+    smoothingAlpha: 0.4,
+    minKeypointScore: 0.3,
+    hint: 'Side-on, knees bent — curl your torso up toward your knees.',
   },
 };
