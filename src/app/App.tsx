@@ -14,13 +14,14 @@ import { InstallButton } from './InstallButton';
 import { SettingsPanel } from './SettingsPanel';
 import { usePrefs } from './usePrefs';
 import { HistoryView } from './HistoryView';
+import { LanguageMenu } from './LanguageMenu';
 
 type Lang = 'en' | 'tr' | 'pl';
 const PACKS: Record<Lang, RepCounterLabels> = { en: EN, tr: TR, pl: PL };
 const LANGS: Array<{ code: Lang; flag: string; label: string }> = [
-  { code: 'en', flag: '🇬🇧', label: 'EN' },
-  { code: 'tr', flag: '🇹🇷', label: 'TR' },
-  { code: 'pl', flag: '🇵🇱', label: 'PL' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'tr', flag: '🇹🇷', label: 'Türkçe' },
+  { code: 'pl', flag: '🇵🇱', label: 'Polski' },
 ];
 
 const EXERCISE_LIST = Object.values(EXERCISES);
@@ -125,28 +126,11 @@ export function App() {
               )}
             </button>
 
-            <div
-              role="radiogroup"
-              aria-label="Language"
-              className="inline-flex rounded-lg border border-border bg-surface p-1"
-            >
-              {LANGS.map((l) => (
-                <button
-                  key={l.code}
-                  type="button"
-                  role="radio"
-                  aria-checked={lang === l.code}
-                  onClick={() => setLang(l.code)}
-                  className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-                    lang === l.code
-                      ? 'bg-accent text-accent-ink'
-                      : 'text-text-dim hover:text-text'
-                  }`}
-                >
-                  <span aria-hidden="true">{l.flag}</span> {l.label}
-                </button>
-              ))}
-            </div>
+            <LanguageMenu
+              langs={LANGS}
+              current={lang}
+              onChange={(c) => setLang(c as Lang)}
+            />
           </div>
         </header>
 

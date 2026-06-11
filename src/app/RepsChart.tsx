@@ -3,42 +3,29 @@ interface RepsChartProps {
   ariaLabel: string;
 }
 
-/** Lightweight hand-rolled SVG bar chart — no chart library, tiny bundle cost. */
+/**
+ * Lightweight mini bar chart — fixed-width bars on a faint track, left-aligned in
+ * chronological order. No chart library; looks sensible with any count (a single
+ * set is one slim bar, not a giant block).
+ */
 export function RepsChart({ values, ariaLabel }: RepsChartProps) {
   if (values.length === 0) return null;
-
-  const W = 100;
-  const H = 32;
-  const gap = 1.5;
-  const n = values.length;
-  const barW = (W - gap * (n - 1)) / n;
   const max = Math.max(...values, 1);
 
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
+    <div
       role="img"
       aria-label={ariaLabel}
-      className="h-16 w-full"
+      className="flex h-16 items-end gap-1 overflow-hidden rounded-lg border border-border bg-surface-2 px-2 py-2"
     >
-      {values.map((v, i) => {
-        const h = (v / max) * (H - 2);
-        const x = i * (barW + gap);
-        const y = H - h;
-        return (
-          <rect
-            key={i}
-            x={x}
-            y={y}
-            width={barW}
-            height={h}
-            rx={0.6}
-            fill="var(--accent)"
-            opacity={0.55 + 0.45 * (v / max)}
-          />
-        );
-      })}
-    </svg>
+      {values.map((v, i) => (
+        <div
+          key={i}
+          title={String(v)}
+          className="w-2.5 shrink-0 rounded-sm bg-accent"
+          style={{ height: `${Math.max(10, (v / max) * 100)}%` }}
+        />
+      ))}
+    </div>
   );
 }
