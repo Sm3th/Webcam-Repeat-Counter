@@ -12,6 +12,7 @@ export default {
         'text-dim': 'var(--text-dim)',
         accent: 'var(--accent)',
         'accent-dim': 'var(--accent-dim)',
+        'accent-ink': 'var(--accent-ink)',
         danger: 'var(--danger)',
         good: 'var(--good)',
       },

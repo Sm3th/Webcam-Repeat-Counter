@@ -3,28 +3,66 @@
 @tailwind utilities;
 
 /*
- * "Athletic Minimalism" design tokens.
+ * "Athletic Minimalism" design tokens — aligned with FitTrack Pro.
  *
- * The feature module reads these CSS variables and NEVER hardcodes hex. The
- * standalone host applies them via the `.rc-theme-standalone` class (set when
- * <RepCounter theme="standalone" />). When embedded with theme="inherit", the
- * feature defines none of these, so the host's own theme drives the colors.
+ * The feature reads a small set of semantic vars (via tailwind.config.js) and
+ * NEVER hardcodes hex. Two themes feed those vars:
+ *
+ *  - theme="standalone" (.rc-theme-standalone): FitTrack's *literal* token values,
+ *    so this demo looks identical to a FitTrack page. Supports a `.light` variant.
+ *  - theme="inherit"   (.rc-theme-inherit): the vars are bridged FROM FitTrack's
+ *    own token names (--p-500, --surface-0, --text-primary, …) with fallbacks, so
+ *    when embedded in FitTrack the host's live theme (incl. light mode) drives it
+ *    with zero host wiring.
  */
 .rc-theme-standalone {
-  --bg: #0a0a0a;
-  --surface: #141414;
-  --surface-2: #1d1d1d;
-  --border: #2a2a2a;
-  --text: #f5f5f5;
-  --text-dim: #9a9a9a;
+  --bg: #0a0a0b;
+  --surface: #12141f;
+  --surface-2: #1a1d2e;
+  --border: #1e2235;
+  --text: #fafafa;
+  --text-dim: #8a8a92;
   --accent: #c6f432;
-  --accent-dim: #9bbf1f;
-  --danger: #ff5a5a;
-  --good: #4ade80;
+  --accent-dim: #a8d128;
+  --accent-ink: #0a0a0b;
+  --danger: #ef4444;
+  --good: #10b981;
+}
+
+.rc-theme-standalone.light {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f5f5f4;
+  --border: rgba(0, 0, 0, 0.1);
+  --text: #0a0a0b;
+  --text-dim: #6a6a72;
+  --accent: #c6f432;
+  --accent-dim: #a8d128;
+  --accent-ink: #0a0a0b;
+  --danger: #dc2626;
+  --good: #059669;
+}
+
+.rc-theme-inherit {
+  --bg: var(--surface-0, #0a0a0b);
+  --surface: var(--surface-1, #131316);
+  --surface-2: var(--surface-3, #232327);
+  --border: var(--border-default, rgba(255, 255, 255, 0.1));
+  --text: var(--text-primary, #fafafa);
+  --text-dim: var(--text-tertiary, #8a8a92);
+  --accent: var(--p-500, #c6f432);
+  --accent-dim: var(--p-600, #a8d128);
+  --accent-ink: var(--text-on-accent, #0a0a0b);
+  --danger: #ef4444;
+  --good: #10b981;
 }
 
 :root {
   color-scheme: dark;
+}
+
+.rc-theme-standalone.light {
+  color-scheme: light;
 }
 
 html,
@@ -45,6 +83,34 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent, #c6f432);
   outline-offset: 2px;
+}
+
+/* ── FitTrack-style host chrome (standalone host layer only) ───────── */
+.rc-hero {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(198, 244, 50, 0.1), transparent),
+    radial-gradient(ellipse 60% 40% at 85% 90%, rgba(168, 209, 40, 0.05), transparent);
+}
+
+/* Elevated card matching FitTrack's .card dark shadow. */
+.rc-elevated {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 4px 20px rgba(0, 0, 0, 0.25);
+}
+.rc-theme-standalone.light .rc-elevated {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+/* Lime gradient primary button, à la FitTrack .btn-primary. */
+.rc-btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+  color: var(--accent-ink);
+  box-shadow:
+    0 4px 14px rgba(198, 244, 50, 0.25),
+    0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Fullscreen camera stage fills the screen without distorting (canvas letterboxes). */

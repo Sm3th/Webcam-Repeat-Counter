@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import * as tf from '@tensorflow/tfjs-core';
-import '@tensorflow/tfjs-backend-webgl';
-import * as poseDetection from '@tensorflow-models/pose-detection';
+import type { PoseDetector, Pose } from '@tensorflow-models/pose-detection';
 import type { Keypoint, KeypointName } from '../engine/types';
+import { createMoveNetDetector, type MoveNetModelType } from './loadDetector';
 
 export type DetectorStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -15,6 +14,8 @@ interface UsePoseDetectorArgs {
   videoRef: React.RefObject<HTMLVideoElement>;
   /** Run detection only while true (e.g. camera ready). */
   enabled: boolean;
+  /** MoveNet variant: 'lightning' (fast) or 'thunder' (accurate). */
+  modelType?: MoveNetModelType;
   /** Called once per processed frame with raw (un-mirrored) keypoints. */
   onFrame: (frame: PoseFrame) => void;
 }
@@ -22,7 +23,12 @@ interface UsePoseDetectorArgs {
 const TARGET_FPS = 30;
 const FRAME_INTERVAL = 1000 / TARGET_FPS;
 
-export function usePoseDetector({ videoRef, enabled, onFrame }: UsePoseDetectorArgs): {
+export function usePoseDetector({
+  videoRef,
+  enabled,
+  modelType = 'lightning',
+  onFrame,
+}: UsePoseDetectorArgs): {
   status: DetectorStatus;
   retry: () => void;
 } {
@@ -43,7 +49,7 @@ export function usePoseDetector({ videoRef, enabled, onFrame }: UsePoseDetectorA
     // a single isActive flag gates every async continuation and the rAF loop.
     let isActive = true;
     let rafId = 0;
-    let detector: poseDetection.PoseDetector | null = null;
+    let detector: PoseDetector | null = null;
     let lastFrameTime = 0;
     let fpsEma: number | null = null;
     let lastTimestamp = performance.now();
@@ -71,7 +77,7 @@ export function usePoseDetector({ videoRef, enabled, onFrame }: UsePoseDetectorA
       const video = videoRef.current;
       if (!video || video.readyState < 2 || video.videoWidth === 0) return;
 
-      let poses: poseDetection.Pose[];
+      let poses: Pose[];
       try {
         poses = await detector.estimatePoses(video, { flipHorizontal: false });
       } catch {
@@ -105,12 +111,7 @@ export function usePoseDetector({ videoRef, enabled, onFrame }: UsePoseDetectorA
     (async () => {
       setStatus('loading');
       try {
-        await tf.setBackend('webgl');
-        await tf.ready();
-        const created = await poseDetection.createDetector(
-          poseDetection.SupportedModels.MoveNet,
-          { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING },
-        );
+        const created = await createMoveNetDetector(modelType);
         if (!isActive) {
           created.dispose();
           return;
@@ -130,7 +131,7 @@ export function usePoseDetector({ videoRef, enabled, onFrame }: UsePoseDetectorA
       detector?.dispose();
       detector = null;
     };
-  }, [enabled, videoRef, retryToken]);
+  }, [enabled, videoRef, retryToken, modelType]);
 
   return { status, retry: () => setRetryToken((n) => n + 1) };
 }

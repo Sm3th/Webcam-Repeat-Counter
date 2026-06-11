@@ -52,6 +52,12 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // TensorFlow.js is intentionally code-split into its own lazily-loaded chunks
+    // (see hooks/loadDetector.ts); they're large by nature and never block the
+    // app shell, so raise the warning threshold above them.
+    chunkSizeWarningLimit: 900,
+  },
   test: {
     environment: 'jsdom',
     globals: true,

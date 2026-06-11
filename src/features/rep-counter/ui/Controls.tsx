@@ -13,7 +13,7 @@ export function Controls({ running, onToggle, onReset, labels }: ControlsProps) 
       <button
         type="button"
         onClick={onToggle}
-        className="rounded-lg bg-accent px-5 py-2.5 text-sm font-bold text-bg transition-colors hover:bg-accent-dim"
+        className="rounded-lg bg-accent px-5 py-2.5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-dim"
       >
         {running ? labels.stop : labels.start}
       </button>

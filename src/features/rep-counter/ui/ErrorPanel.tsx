@@ -24,7 +24,7 @@ export function ErrorPanel({ kind, onRetry, labels }: ErrorPanelProps) {
       <button
         type="button"
         onClick={onRetry}
-        className="rounded-lg bg-accent px-5 py-2.5 text-sm font-bold text-bg transition-colors hover:bg-accent-dim"
+        className="rounded-lg bg-accent px-5 py-2.5 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-dim"
       >
         {labels.errors.retry}
       </button>

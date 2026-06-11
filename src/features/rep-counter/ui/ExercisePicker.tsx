@@ -35,7 +35,7 @@ export function ExercisePicker({
             onClick={() => onSelect(ex)}
             className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
               selected
-                ? 'bg-accent text-bg'
+                ? 'bg-accent text-accent-ink'
                 : 'text-text-dim hover:text-text'
             }`}
           >

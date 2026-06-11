@@ -226,7 +226,7 @@ export function RepCounter({
     return null;
   }, [cameraStatus, detectorStatus]);
 
-  const rootClass = theme === 'standalone' ? 'rc-theme-standalone' : '';
+  const rootClass = theme === 'standalone' ? 'rc-theme-standalone' : 'rc-theme-inherit';
   const exerciseName = labels.exercises[exercise.id] ?? exercise.label;
 
   // Live session totals = finalized sets + the in-progress set.
