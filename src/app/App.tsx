@@ -13,6 +13,7 @@ import { createLocalStorageSink } from '../features/rep-counter/integration/loca
 import { InstallButton } from './InstallButton';
 import { SettingsPanel } from './SettingsPanel';
 import { usePrefs } from './usePrefs';
+import { HistoryView } from './HistoryView';
 
 type Lang = 'en' | 'tr' | 'pl';
 const PACKS: Record<Lang, RepCounterLabels> = { en: EN, tr: TR, pl: PL };
@@ -28,8 +29,11 @@ export function App() {
   const [exercise, setExercise] = useState<ExerciseConfig>(EXERCISES.pushup);
   const [lang, setLang] = useState<Lang>('en');
   const [light, setLight] = useState(false);
+  const [view, setView] = useState<'train' | 'history'>('train');
   const [prefs, setPrefs] = usePrefs();
   const labels = PACKS[lang];
+  const exerciseName = (id: string): string =>
+    (labels.exercises as Record<string, string>)[id] ?? id;
 
   // Standalone persistence: completed sets land in localStorage.
   const sink = useMemo(() => createLocalStorageSink(), []);
@@ -119,24 +123,51 @@ export function App() {
           </div>
         </header>
 
-        <ExercisePicker
-          exercises={EXERCISE_LIST}
-          selectedId={exercise.id}
-          onSelect={setExercise}
-          labels={labels}
-        />
+        <nav
+          role="tablist"
+          aria-label="View"
+          className="inline-flex self-start rounded-lg border border-border bg-surface p-1"
+        >
+          {(['train', 'history'] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              role="tab"
+              aria-selected={view === v}
+              onClick={() => setView(v)}
+              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
+                view === v ? 'bg-accent text-accent-ink' : 'text-text-dim hover:text-text'
+              }`}
+            >
+              {labels.nav[v]}
+            </button>
+          ))}
+        </nav>
 
-        <RepCounter
-          exercise={exercise}
-          active={true}
-          labels={labels}
-          theme="standalone"
-          modelType={prefs.modelType}
-          sound={prefs.sound}
-          voice={prefs.voice}
-          restSeconds={prefs.restSeconds}
-          sink={sink}
-        />
+        {view === 'train' ? (
+          <>
+            <ExercisePicker
+              exercises={EXERCISE_LIST}
+              selectedId={exercise.id}
+              onSelect={setExercise}
+              labels={labels}
+            />
+
+            <RepCounter
+              exercise={exercise}
+              active={true}
+              labels={labels}
+              theme="standalone"
+              modelType={prefs.modelType}
+              sound={prefs.sound}
+              voice={prefs.voice}
+              restSeconds={prefs.restSeconds}
+              sink={sink}
+            />
+          </>
+        ) : (
+          <HistoryView labels={labels} exerciseName={exerciseName} />
+        )}
       </div>
     </div>
   );

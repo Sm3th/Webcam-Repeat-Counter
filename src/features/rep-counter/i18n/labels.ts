@@ -45,6 +45,19 @@ export interface RepCounterLabels {
     rest: string;
     skip: string;
   };
+  nav: {
+    train: string;
+    history: string;
+  };
+  history: {
+    title: string;
+    empty: string;
+    exportJson: string;
+    exportCsv: string;
+    bestSet: string;
+    volume: string;
+    sets: string;
+  };
   errors: {
     denied: string;
     nocamera: string;
@@ -100,6 +113,19 @@ export const EN: RepCounterLabels = {
     close: 'Done',
     rest: 'Rest',
     skip: 'Skip',
+  },
+  nav: {
+    train: 'Train',
+    history: 'History',
+  },
+  history: {
+    title: 'History',
+    empty: 'No sets yet — finish a set to see your progress here.',
+    exportJson: 'Export JSON',
+    exportCsv: 'Export CSV',
+    bestSet: 'Best set',
+    volume: 'Total reps',
+    sets: 'Sets',
   },
   errors: {
     denied:
@@ -167,6 +193,19 @@ export const TR: RepCounterLabels = {
     rest: 'Dinlen',
     skip: 'Geç',
   },
+  nav: {
+    train: 'Antrenman',
+    history: 'Geçmiş',
+  },
+  history: {
+    title: 'Geçmiş',
+    empty: 'Henüz set yok — bir seti tamamla, ilerlemen burada görünsün.',
+    exportJson: 'JSON indir',
+    exportCsv: 'CSV indir',
+    bestSet: 'En iyi set',
+    volume: 'Toplam tekrar',
+    sets: 'Set',
+  },
   errors: {
     denied:
       'Kamera erişimi reddedildi. Tarayıcıdan kamera iznini ver ve tekrar dene.',
@@ -232,6 +271,19 @@ export const PL: RepCounterLabels = {
     close: 'Gotowe',
     rest: 'Odpoczynek',
     skip: 'Pomiń',
+  },
+  nav: {
+    train: 'Trenuj',
+    history: 'Historia',
+  },
+  history: {
+    title: 'Historia',
+    empty: 'Brak serii — ukończ serię, aby zobaczyć tu swoje postępy.',
+    exportJson: 'Eksport JSON',
+    exportCsv: 'Eksport CSV',
+    bestSet: 'Najlepsza seria',
+    volume: 'Łącznie powt.',
+    sets: 'Serie',
   },
   errors: {
     denied:
