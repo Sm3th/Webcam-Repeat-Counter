@@ -31,16 +31,37 @@ export function App() {
   const sink = useMemo(() => createLocalStorageSink(), []);
 
   return (
-    <div className="rc-theme-standalone min-h-full bg-bg text-text">
-      <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
+    <div className="rc-theme-standalone relative min-h-full overflow-hidden bg-bg text-text">
+      {/* Decorative lime glow behind the header. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 -top-32 h-80"
+        style={{
+          background:
+            'radial-gradient(60% 60% at 50% 0%, rgba(198,244,50,0.14), transparent 70%)',
+        }}
+      />
+      <div className="relative mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
         <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Rep<span className="text-accent">Counter</span>
-            </h1>
-            <p className="text-sm text-text-dim">
-              Real-time calisthenics reps from your webcam — on device.
-            </p>
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-surface text-accent"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="5" y="10.5" width="14" height="3" rx="1" />
+                <rect x="3" y="7" width="3" height="10" rx="1" />
+                <rect x="18" y="7" width="3" height="10" rx="1" />
+              </svg>
+            </span>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Rep<span className="text-accent">Counter</span>
+              </h1>
+              <p className="text-sm text-text-dim">
+                Real-time calisthenics reps from your webcam — on device.
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <InstallButton label={labels.install} />

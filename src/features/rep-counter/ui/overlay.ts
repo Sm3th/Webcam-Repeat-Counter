@@ -37,8 +37,9 @@ interface MappedPoint {
 
 /**
  * Draws the mirrored video frame plus a mirrored skeleton. Keypoints arrive in
- * video-pixel space; we mirror for DISPLAY only (`mx = canvas.width - kp.x*sx`).
- * The rep engine consumes the raw, un-mirrored keypoints elsewhere.
+ * video-pixel space; we letterbox the video to preserve aspect ratio and mirror
+ * for DISPLAY only. The rep engine consumes the raw, un-mirrored keypoints
+ * elsewhere.
  */
 export function drawFrame({
   ctx,
@@ -51,22 +52,31 @@ export function drawFrame({
 }: DrawOptions): void {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  if (video.videoWidth === 0 || video.videoHeight === 0) return;
+
+  // Aspect-preserving "contain" fit: scale the video to fit the canvas and
+  // center it, so it never stretches (e.g. 4:3 cam on a 16:9 fullscreen).
+  const scale = Math.min(
+    canvas.width / video.videoWidth,
+    canvas.height / video.videoHeight,
+  );
+  const drawW = video.videoWidth * scale;
+  const drawH = video.videoHeight * scale;
+  const offsetX = (canvas.width - drawW) / 2;
+  const offsetY = (canvas.height - drawH) / 2;
+
   // Mirror the video image only.
   ctx.save();
   ctx.translate(canvas.width, 0);
   ctx.scale(-1, 1);
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
   ctx.restore();
-
-  if (video.videoWidth === 0 || video.videoHeight === 0) return;
-  const sx = canvas.width / video.videoWidth;
-  const sy = canvas.height / video.videoHeight;
 
   const mapped = new Map<KeypointName, MappedPoint>();
   for (const kp of keypoints) {
     mapped.set(kp.name, {
-      x: canvas.width - kp.x * sx, // mirror for display
-      y: kp.y * sy,
+      x: canvas.width - (offsetX + kp.x * scale), // mirror for display
+      y: offsetY + kp.y * scale,
       score: kp.score,
       name: kp.name,
     });

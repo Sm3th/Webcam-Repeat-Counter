@@ -13,6 +13,8 @@ import { RepHud } from './ui/RepHud';
 import { StatusBar } from './ui/StatusBar';
 import { Controls } from './ui/Controls';
 import { ErrorPanel, type RepCounterErrorKind } from './ui/ErrorPanel';
+import { OverlayHud } from './ui/OverlayHud';
+import { SessionStats, type SessionSummary } from './ui/SessionStats';
 
 interface HudState {
   count: number;
@@ -59,6 +61,15 @@ export function RepCounter({
 
   const [hud, setHud] = useState<HudState>(INITIAL_HUD);
 
+  // Cumulative session totals across finalized sets.
+  const sessionRef = useRef<SessionSummary>({
+    totalReps: 0,
+    sets: 0,
+    goodReps: 0,
+    bestSet: 0,
+  });
+  const [session, setSession] = useState<SessionSummary>(sessionRef.current);
+
   // Keep latest callbacks/labels reachable from imperative handlers.
   const onRepRef = useRef(onRep);
   onRepRef.current = onRep;
@@ -93,6 +104,16 @@ export function RepCounter({
     onSetCompleteRef.current?.(set);
     void sinkRef.current?.saveSet(set);
     perRepRef.current = [];
+
+    const prev = sessionRef.current;
+    const next: SessionSummary = {
+      totalReps: prev.totalReps + set.reps,
+      sets: prev.sets + 1,
+      goodReps: prev.goodReps + set.goodFormReps,
+      bestSet: Math.max(prev.bestSet, set.reps),
+    };
+    sessionRef.current = next;
+    setSession(next);
   }, []);
 
   const resetEngine = useCallback(() => {
@@ -206,11 +227,21 @@ export function RepCounter({
   }, [cameraStatus, detectorStatus]);
 
   const rootClass = theme === 'standalone' ? 'rc-theme-standalone' : '';
+  const exerciseName = labels.exercises[exercise.id] ?? exercise.label;
+
+  // Live session totals = finalized sets + the in-progress set.
+  const currentGood = perRepRef.current.filter((r) => r.goodForm === true).length;
+  const liveSummary: SessionSummary = {
+    totalReps: session.totalReps + hud.count,
+    sets: session.sets,
+    goodReps: session.goodReps + currentGood,
+    bestSet: Math.max(session.bestSet, hud.count),
+  };
 
   return (
     <div className={`${rootClass} flex w-full flex-col gap-6`}>
       {children}
-      <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+      <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
         <div className="flex flex-col gap-4">
           {errorKind && running ? (
             <ErrorPanel kind={errorKind} onRetry={handleRetry} labels={labels} />
@@ -221,28 +252,45 @@ export function RepCounter({
               activeJoints={activeJoints}
               minScore={exercise.minKeypointScore}
               active={enabled}
+              fullscreenLabel={labels.fullscreen}
+              exitFullscreenLabel={labels.exitFullscreen}
+              overlay={
+                <OverlayHud
+                  exerciseName={exerciseName}
+                  count={hud.count}
+                  phase={hud.phase}
+                  lastRepGoodForm={hud.lastRepGoodForm}
+                  inFrame={hud.inFrame}
+                  running={running}
+                  labels={labels}
+                />
+              }
             />
           )}
           <StatusBar fps={hud.fps} inFrame={hud.inFrame} labels={labels} />
         </div>
 
-        <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface p-6">
-          <RepHud
-            count={hud.count}
-            phase={hud.phase}
-            lastRepGoodForm={hud.lastRepGoodForm}
-            labels={labels}
-          />
-          <Controls
-            running={running}
-            onToggle={handleToggle}
-            onReset={handleReset}
-            labels={labels}
-          />
-          {detectorStatus === 'loading' && running && (
-            <p className="text-xs text-text-dim">{labels.loadingModel}</p>
-          )}
-          <p className="text-center text-xs text-text-dim">{exercise.hint}</p>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface p-6">
+            <RepHud
+              count={hud.count}
+              phase={hud.phase}
+              lastRepGoodForm={hud.lastRepGoodForm}
+              labels={labels}
+            />
+            <Controls
+              running={running}
+              onToggle={handleToggle}
+              onReset={handleReset}
+              labels={labels}
+            />
+            {detectorStatus === 'loading' && running && (
+              <p className="text-xs text-text-dim">{labels.loadingModel}</p>
+            )}
+            <p className="text-center text-xs text-text-dim">{exercise.hint}</p>
+          </div>
+
+          <SessionStats summary={liveSummary} labels={labels} />
         </div>
       </div>
     </div>

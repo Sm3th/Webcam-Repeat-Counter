@@ -15,6 +15,15 @@ export interface RepCounterLabels {
   loadingModel: string;
   fps: string;
   install: string;
+  fullscreen: string;
+  exitFullscreen: string;
+  session: {
+    title: string;
+    total: string;
+    sets: string;
+    accuracy: string;
+    best: string;
+  };
   errors: {
     denied: string;
     nocamera: string;
@@ -41,6 +50,15 @@ export const EN: RepCounterLabels = {
   loadingModel: 'Loading model…',
   fps: 'FPS',
   install: 'Install app',
+  fullscreen: 'Fullscreen',
+  exitFullscreen: 'Exit fullscreen',
+  session: {
+    title: 'Session',
+    total: 'Total reps',
+    sets: 'Sets',
+    accuracy: 'Form',
+    best: 'Best set',
+  },
   errors: {
     denied:
       'Camera access was denied. Allow camera permission in your browser, then retry.',
@@ -76,6 +94,15 @@ export const TR: RepCounterLabels = {
   loadingModel: 'Model yükleniyor…',
   fps: 'FPS',
   install: 'Uygulamayı yükle',
+  fullscreen: 'Tam ekran',
+  exitFullscreen: 'Tam ekrandan çık',
+  session: {
+    title: 'Oturum',
+    total: 'Toplam tekrar',
+    sets: 'Set',
+    accuracy: 'Form',
+    best: 'En iyi set',
+  },
   errors: {
     denied:
       'Kamera erişimi reddedildi. Tarayıcıdan kamera iznini ver ve tekrar dene.',
@@ -111,6 +138,15 @@ export const PL: RepCounterLabels = {
   loadingModel: 'Ładowanie modelu…',
   fps: 'FPS',
   install: 'Zainstaluj aplikację',
+  fullscreen: 'Pełny ekran',
+  exitFullscreen: 'Wyjdź z pełnego ekranu',
+  session: {
+    title: 'Sesja',
+    total: 'Łącznie powtórzeń',
+    sets: 'Serie',
+    accuracy: 'Forma',
+    best: 'Najlepsza seria',
+  },
   errors: {
     denied:
       'Odmówiono dostępu do kamery. Zezwól na dostęp w przeglądarce i spróbuj ponownie.',

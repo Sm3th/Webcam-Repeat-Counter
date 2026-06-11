@@ -47,6 +47,25 @@ body {
   outline-offset: 2px;
 }
 
+/* Fullscreen camera stage fills the screen without distorting (canvas letterboxes). */
+.rc-stage:fullscreen {
+  aspect-ratio: auto;
+  width: 100vw;
+  height: 100vh;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Readable text over the live video. */
+.rc-overlay-shadow {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Subtle lime glow for the focal rep count. */
+.rc-glow {
+  text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
